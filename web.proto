@@ -1,0 +1,462 @@
+package whatsapp;
+
+option java_package = "com.whatsapp.proto";
+
+import "e2e.proto";
+import "protocol.proto";
+
+message WebMessageInfo {
+  enum Status {
+    ERROR = 0;
+    PENDING = 1;  // clock
+    SERVER_ACK = 2;  // single check
+    DELIVERY_ACK = 3;  // double check
+    READ = 4;  // blue check
+    PLAYED = 5;  // PTT played and VOM viewed, both send/receive
+  }
+
+  enum StubType {
+    UNKNOWN = 0; // shouldn't be used
+    REVOKE = 1; // message was revoked by original message sender
+    CIPHERTEXT = 2; // undecrypted message
+    FUTUREPROOF = 3; // message was decrypted but phone doesnt understand it
+
+    // notification message templates
+
+    // OLD biz system messages
+    NON_VERIFIED_TRANSITION = 4; // 1 raw string param, business name used in alert when notification clicked
+    UNVERIFIED_TRANSITION = 5; // 1 raw string param, business name used in alert when notification clicked
+    VERIFIED_TRANSITION = 6; // 1 raw string param, business name used in alert when notification clicked
+    VERIFIED_LOW_UNKNOWN = 7; // 1 raw string param, business name used in alert when notification clicked
+    VERIFIED_HIGH = 8; // 1 raw string param, business name used in alert when notification clicked
+
+    // spec: doc/biz/privacy_transparency.md
+    // NEW biz system messages
+    VERIFIED_INITIAL_UNKNOWN = 9; // 0 params
+    VERIFIED_INITIAL_LOW = 10; // 1 raw string param, business name used in notification and alert
+    VERIFIED_INITIAL_HIGH = 11; // 1 raw string param, business name used in notification and alert
+    VERIFIED_TRANSITION_ANY_TO_NONE = 12; // 0 params
+    VERIFIED_TRANSITION_ANY_TO_HIGH = 13; // 1 raw string param, business name used in notification and alert
+    VERIFIED_TRANSITION_HIGH_TO_LOW = 14; // 1 raw string param, business name used in notification and alert
+    VERIFIED_TRANSITION_HIGH_TO_UNKNOWN = 15; // 1 raw string param, business name used in notification and alert
+    VERIFIED_TRANSITION_UNKNOWN_TO_LOW = 16; // 1 raw string param, business name used in notification and alert
+    VERIFIED_TRANSITION_LOW_TO_UNKNOWN = 17; // 1 raw string param, business name used in notification and alert
+    VERIFIED_TRANSITION_NONE_TO_LOW = 18; // 1 raw string param, business name used in alert
+    VERIFIED_TRANSITION_NONE_TO_UNKNOWN = 19; // 0 params
+
+    // group notification's author is WebMessageInfo.participant
+    GROUP_CREATE = 20; // 1 raw string param, group subject
+    GROUP_CHANGE_SUBJECT = 21; // 1 raw string param, group subject
+    GROUP_CHANGE_ICON = 22; // 1 raw string param, arbitrary, or the literal "remove"
+    GROUP_CHANGE_INVITE_LINK = 23; // 0 params
+    GROUP_CHANGE_DESCRIPTION = 24; // 0 params
+    GROUP_CHANGE_RESTRICT = 25; // 1 param, literal string "on" or "off"
+    GROUP_CHANGE_ANNOUNCE = 26; // 1 param, literal string "on" or "off"
+    GROUP_PARTICIPANT_ADD = 27; // any number of jid params, list of participants added
+    GROUP_PARTICIPANT_REMOVE = 28; // any number of jid params, list of participants removed
+    GROUP_PARTICIPANT_PROMOTE = 29; // any number of jid params, list of participants promoted to admin
+    GROUP_PARTICIPANT_DEMOTE = 30; // any number of jid params, list of participants demoted
+    GROUP_PARTICIPANT_INVITE = 31; // any number of jid params, list of participants joined through invite link
+    GROUP_PARTICIPANT_LEAVE = 32; // any number of jid params, list of participants that left the group
+    GROUP_PARTICIPANT_CHANGE_NUMBER = 33; // 1 jid param, user's new jid after change_number
+
+    BROADCAST_CREATE = 34; // 1 raw string param, count of participants in the bclist
+    BROADCAST_ADD = 35; // any number of jid params, list of participants added
+    BROADCAST_REMOVE = 36; // any number of jid params, list of participants removed
+
+    GENERIC_NOTIFICATION = 37; // 1 raw string param, entire text content of the custom system message
+
+    E2E_IDENTITY_CHANGED = 38; // 1 jid param, user whose identity key changed
+    E2E_ENCRYPTED = 39; // 0 params
+
+    CALL_MISSED_VOICE = 40; // 0 params (send missed call time as WebMessageInfo.messageTimestamp)
+    CALL_MISSED_VIDEO = 41; // 0 params (send missed call time as WebMessageInfo.messageTimestamp)
+
+    INDIVIDUAL_CHANGE_NUMBER = 42; // 2 params, [OLD_JID, NEW_JID]
+
+    GROUP_DELETE = 43; // 0 params
+    GROUP_ANNOUNCE_MODE_MESSAGE_BOUNCE = 44; // 0 params
+
+    CALL_MISSED_GROUP_VOICE = 45; // 0 params (send missed call time as WebMessageInfo.messageTimestamp)
+    CALL_MISSED_GROUP_VIDEO = 46; // 0 params (send missed call time as WebMessageInfo.messageTimestamp)
+
+    PAYMENT_CIPHERTEXT = 47; // 0 params
+    PAYMENT_FUTUREPROOF = 48; // 0 params
+    PAYMENT_TRANSACTION_STATUS_UPDATE_FAILED = 49; // 1 param, receiver jid (send transaction time as WebMessageInfo.messageTimestamp)
+    PAYMENT_TRANSACTION_STATUS_UPDATE_REFUNDED = 50; // 1 param, receiver jid (send transaction time as WebMessageInfo.messageTimestamp)
+    PAYMENT_TRANSACTION_STATUS_UPDATE_REFUND_FAILED = 51; // 1 param, receiver jid (send transaction time as WebMessageInfo.messageTimestamp)
+    PAYMENT_TRANSACTION_STATUS_RECEIVER_PENDING_SETUP = 52; // 3 params, sender jid, 3-character ISO 4217 currency code, amount*1000 formatted as string
+    PAYMENT_TRANSACTION_STATUS_RECEIVER_SUCCESS_AFTER_HICCUP = 53; // 1 param, sender jid (send relative time as WebMessageInfo.messageTimestamp)
+    PAYMENT_ACTION_ACCOUNT_SETUP_REMINDER = 54; // 1 param, sender jid
+    PAYMENT_ACTION_SEND_PAYMENT_REMINDER = 55; // 1 param, receiver jid
+    PAYMENT_ACTION_SEND_PAYMENT_INVITATION = 56; // 1 param, receiver jid
+    PAYMENT_ACTION_REQUEST_DECLINED = 57; // 3 params, jid, 3-character ISO 4217 currency code, amount*1000
+    PAYMENT_ACTION_REQUEST_EXPIRED = 58; // 4 params, request sender jid, request receiver jid, 3-character ISO 4217 currency code, amount*1000
+    PAYMENT_ACTION_REQUEST_CANCELLED = 59; // 3 params, jid, 3-character ISO 4217 currency code, amount*1000
+
+    // spec: doc/biz/privacy_transparency.md
+    // NEWER 2 tier verification level system messages
+    BIZ_VERIFIED_TRANSITION_TOP_TO_BOTTOM = 60; // 1 param, business name
+    BIZ_VERIFIED_TRANSITION_BOTTOM_TO_TOP = 61; // 1 param, business name
+    BIZ_INTRO_TOP = 62; // 1 param, business name
+    BIZ_INTRO_BOTTOM = 63; // 0 params
+    BIZ_NAME_CHANGE = 64; // 1 param, new business name
+    BIZ_MOVE_TO_CONSUMER_APP = 65; // 0 params
+    BIZ_TWO_TIER_MIGRATION_TOP = 66; // 1 param, business name
+    BIZ_TWO_TIER_MIGRATION_BOTTOM = 67; // 1 param, business name
+
+    OVERSIZED = 68; // message is too big to send to web (size limit specified by server prop)
+    GROUP_CHANGE_NO_FREQUENTLY_FORWARDED = 69; // 1 param, literal string "on" or "off"
+    GROUP_V4_ADD_INVITE_SENT = 70; // any number of jid params, list of participants invited via an add request.
+    GROUP_PARTICIPANT_ADD_REQUEST_JOIN = 71; // any number of jid params, list of participants joined through group v4 add request
+
+    CHANGE_EPHEMERAL_SETTING = 72; // 1 or 2 params, new ephemeral duration, jid of whom changed the setting (omitted if setting is turned on prior to user joining the group)
+
+    E2E_DEVICE_CHANGED = 73; // 3 params, user whose device changed, devicesAdded, devicesRemoved
+
+    VIEWED_ONCE = 74 [deprecated=true]; // deprecated, using `PLAYED` in the `status` attribute instead
+
+    E2E_ENCRYPTED_NOW = 75; // 0 params, this is similar to E2E_ENCRYPTED, just appears inbetween messages when privacy state changes instead of at the top
+
+    // spec: doc/biz/privacy_transparency.md
+    // These are system messages to show the business privacy state
+    // chat state variances:
+    // - verified: a business can be verified (high) or not
+    // - host_storage: can be FB or PREMISE
+    // - actual_actor: can be BSP(business solution provider) or SELF
+    BLUE_MSG_BSP_FB_TO_BSP_PREMISE = 76 [deprecated=true]; // 0 or 1 param, business name if contact is verified when this message is created
+    BLUE_MSG_BSP_FB_TO_SELF_FB = 77 [deprecated=true]; // 0 or 1 param, business name if contact is verified when this message is created
+    BLUE_MSG_BSP_FB_TO_SELF_PREMISE = 78 [deprecated=true]; // 0 or 1 param, business name if contact is verified when this message is created
+    BLUE_MSG_BSP_FB_UNVERIFIED = 79 [deprecated=true];
+    BLUE_MSG_BSP_FB_UNVERIFIED_TO_SELF_PREMISE_VERIFIED = 80 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_BSP_FB_VERIFIED = 81 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_BSP_FB_VERIFIED_TO_SELF_PREMISE_UNVERIFIED = 82 [deprecated=true];
+    BLUE_MSG_BSP_PREMISE_TO_SELF_PREMISE = 83 [deprecated=true]; // 0 or 1 param, business name if contact is verified when this message is created
+    BLUE_MSG_BSP_PREMISE_UNVERIFIED = 84 [deprecated=true];
+    BLUE_MSG_BSP_PREMISE_UNVERIFIED_TO_SELF_PREMISE_VERIFIED = 85 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_BSP_PREMISE_VERIFIED = 86 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_BSP_PREMISE_VERIFIED_TO_SELF_PREMISE_UNVERIFIED = 87 [deprecated=true];
+    BLUE_MSG_CONSUMER_TO_BSP_FB_UNVERIFIED = 88 [deprecated=true];
+    BLUE_MSG_CONSUMER_TO_BSP_PREMISE_UNVERIFIED = 89 [deprecated=true];
+    BLUE_MSG_CONSUMER_TO_SELF_FB_UNVERIFIED = 90 [deprecated=true];
+    BLUE_MSG_CONSUMER_TO_SELF_PREMISE_UNVERIFIED = 91 [deprecated=true];
+    BLUE_MSG_SELF_FB_TO_BSP_PREMISE = 92 [deprecated=true]; // 0 or 1 param, business name if contact is verified when this message is created
+    BLUE_MSG_SELF_FB_TO_SELF_PREMISE = 93 [deprecated=true]; // 0 or 1 param, business name if contact is verified when this message is created
+    BLUE_MSG_SELF_FB_UNVERIFIED = 94 [deprecated=true];
+    BLUE_MSG_SELF_FB_UNVERIFIED_TO_SELF_PREMISE_VERIFIED = 95 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_SELF_FB_VERIFIED = 96 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_SELF_FB_VERIFIED_TO_SELF_PREMISE_UNVERIFIED = 97 [deprecated=true];
+    BLUE_MSG_SELF_PREMISE_TO_BSP_PREMISE = 98 [deprecated=true]; // 0 or 1 param, business name if contact is verified when this message is created
+    BLUE_MSG_SELF_PREMISE_UNVERIFIED = 99 [deprecated=true];
+    BLUE_MSG_SELF_PREMISE_VERIFIED = 100 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_TO_BSP_FB = 101 [deprecated=true]; // 0 or 1 param, business name if contact is verified when this message is created
+    BLUE_MSG_TO_CONSUMER = 102 [deprecated=true];
+    BLUE_MSG_TO_SELF_FB = 103 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_UNVERIFIED_TO_BSP_FB_VERIFIED = 104 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_UNVERIFIED_TO_BSP_PREMISE_VERIFIED = 105 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_UNVERIFIED_TO_SELF_FB_VERIFIED = 106 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_UNVERIFIED_TO_VERIFIED = 107 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_VERIFIED_TO_BSP_FB_UNVERIFIED = 108 [deprecated=true];
+    BLUE_MSG_VERIFIED_TO_BSP_PREMISE_UNVERIFIED = 109 [deprecated=true];
+    BLUE_MSG_VERIFIED_TO_SELF_FB_UNVERIFIED = 110 [deprecated=true];
+    BLUE_MSG_VERIFIED_TO_UNVERIFIED = 111 [deprecated=true];
+    BLUE_MSG_BSP_FB_UNVERIFIED_TO_BSP_PREMISE_VERIFIED = 112 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_BSP_FB_UNVERIFIED_TO_SELF_FB_VERIFIED = 113 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_BSP_FB_VERIFIED_TO_BSP_PREMISE_UNVERIFIED = 114 [deprecated=true];
+    BLUE_MSG_BSP_FB_VERIFIED_TO_SELF_FB_UNVERIFIED = 115 [deprecated=true];
+    BLUE_MSG_SELF_FB_UNVERIFIED_TO_BSP_PREMISE_VERIFIED = 116 [deprecated=true]; // 1 param, business name
+    BLUE_MSG_SELF_FB_VERIFIED_TO_BSP_PREMISE_UNVERIFIED = 117 [deprecated=true];
+
+    E2E_IDENTITY_UNAVAILABLE = 118; // 0 param, system message where security codes were turned on for a chat but now they will no longer be received because the business is a non-e2e API user
+
+    GROUP_CREATING = 119; // params - group subject and list of participants in group
+    GROUP_CREATE_FAILED = 120; // params - group subject and list of participants in group
+    GROUP_BOUNCED = 121; // no params
+    BLOCK_CONTACT = 122; // boolean string param - is blocked or not
+    EPHEMERAL_SETTING_NOT_APPLIED = 123; // int param - setting duration
+    SYNC_FAILED = 124; // no params
+    SYNCING = 125; // no params
+
+    // spec: doc/biz/privacy_transparency.md
+    // These are system messages to show the business privacy mode
+    // BIZ_PRIVACY_MODE_INIT_FB and BIZ_PRIVACY_MODE_INIT_BSP show at the top of all content messages
+    // BIZ_PRIVACY_MODE_TO_FB and BIZ_PRIVACY_MODE_TO_BSP show in between content messages
+    BIZ_PRIVACY_MODE_INIT_FB = 126; // no params
+    BIZ_PRIVACY_MODE_INIT_BSP = 127; // no params
+    BIZ_PRIVACY_MODE_TO_FB = 128; // no params
+    BIZ_PRIVACY_MODE_TO_BSP = 129; // no params
+
+    DISAPPEARING_MODE = 130; // 2 params, 1st param is duration, 2nd param is initiator, should only be used for 1:1 chats
+
+    E2E_DEVICE_FETCH_FAILED = 131; // 1 jid param, user whose devices couldn't be fetched
+
+    ADMIN_REVOKE = 132; // message was revoked by a group admin (not original message sender)
+
+    GROUP_INVITE_LINK_GROWTH_LOCKED = 133; // [1 param boolean, true = link is not available, false = available again]
+  }
+
+  // When there is a race condition and the phone client renders the "i" button, the phone client should inform the web client by using the biz_privacy_status WebMessageInfo enum attribute and the verified_biz_name string value persisted on the phone client:
+  // spec: doc/biz/privacy_transparency.md "Protocol Buffers" section
+  enum BizPrivacyStatus {
+    E2EE = 0;
+    FB = 2;
+    BSP = 1;
+    BSP_AND_FB = 3 [deprecated=true];
+  }
+
+  required MessageKey key = 1;
+  optional Message message = 2;
+  optional uint64 message_timestamp = 3;  // in unixtime, client timestamp
+  optional Status status = 4 [default = PENDING];
+  optional string participant = 5 [(jid) = true];  // message author, if MessageKey.remote_jid is a group
+  /*
+   in unixtime, server-assigned timestamp
+
+   The primary device should only set this field for its own outgoing messages.
+   Companion devices should save whatever value the primary device sets.
+
+   The following cases help clarify how the primary device should and shouldn't
+   set this field under various conditions.
+
+   If `fromMe = True` (i.e., outgoing/incoming message from current account)...
+     - (A) Status > PENDING (i.e., after server ack)
+       - (A.1) Primary did save c2s timestamp (i.e., from ack or receipt).
+         - Set `message_c2s_timestamp` with the saved value if it's different
+           than the saved value for `message_timestamp`.
+         - Note: For an incoming message from a companion, (A.1) indicates
+           unoptimized behavior.
+       - (A.2) Primary didn't save c2s timestamp.
+         - Don't set `message_c2s_timestamp`.
+         - Note: For an outgoing message from the primary, (A.2) indicates
+           unexpected behavior or that c2s timestamps weren't saved by prior
+           builds.
+     - (B) Status <= PENDING
+         - Don't set `message_c2s_timestamp`.
+
+   If `fromMe = False` (i.e., incoming message from different account)...
+     - (C) Don't set `message_c2s_timestamp`.
+   */
+  optional uint64 message_c2s_timestamp = 6;
+
+  optional bool ignore = 16;  // previously 'invis' in xml
+  optional bool starred = 17;
+  optional bool broadcast = 18;  // true if is a fanned-out broadcast message
+  optional string push_name = 19;  // push name, or previously 'notify' in xml
+  optional bytes media_ciphertext_sha256 = 20;  // nice to have for message forwarding
+  optional bool multicast = 21; // if true, phone should include <multicast> node on outgoing message
+  optional bool url_text = 22; // true indicates the message used the text arg of whatsapp://send link; include <url_text> node
+  optional bool url_number = 23; // true indicates the message used the number arg of whatsapp:// send link; include <url_number> node
+  optional StubType message_stub_type = 24; // this field should be set if Message is not present
+  optional bool clear_media = 25; // used only with revoke; if true, phone should also delete media file
+  repeated string message_stub_parameters = 26; // ordered list of params for template StubTypes
+  optional uint32 duration = 27; // live location message duration in seconds
+  repeated string labels = 28; // list of label ids that this message is tagged with
+  optional PaymentInfo payment_info = 29; // payment info if Message is a SendPaymentMessage or RequestPaymentMessage or StubType.PAYMENT_CIPHERTEXT/FUTUREPROOF
+  optional Message.LiveLocationMessage final_live_location = 30; // final location data for a live location message
+  optional PaymentInfo quoted_payment_info = 31; // payment info for a quoted SendPaymentMessage or RequestPaymentMessage
+  optional uint64 ephemeral_start_timestamp = 32; // server ack timestamp in unixtime, required only for messages from me
+  optional uint32 ephemeral_duration = 33 [deprecated=true]; // required only for messages without duration in the Message protobuf (e.g. broadcast list, from old clients)
+  optional bool ephemeral_off_to_on = 34 [deprecated=true]; // required only for EPHEMERAL_SETTING ProtocolMessage, used for displaying the right type of system message
+  optional bool ephemeral_out_of_sync = 35; // whether the message should display the ephemeral info button
+  optional BizPrivacyStatus biz_privacy_status = 36; // privacy status of the message when it is out of sync with the one shown in system messages
+  optional string verified_biz_name = 37; // business name used when biz_privacy_status is present. business name can change and phone persist it for specific messages
+  optional MediaData media_data = 38; // Media data for media files - some extra data which is not serialized in E2E messages
+  optional PhotoChange photo_change = 39; // photo change object for changed group icon
+  repeated UserReceipt user_receipt = 40; // Message's user receipt (one per user), for cross platform migration only
+  repeated Reaction reactions = 41; // Reactions to this message. This is for history sync only - the legacy web protocol does not support reactions.
+  optional MediaData quoted_sticker_data = 42; // Quoted sticker data - some extra data which is not serialized in E2E messages. This is used for x-migration and only for quoted stickers
+  optional bytes futureproof_data = 43; // For StubType.FUTUREPROOF, for cross platform migration only
+  optional StatusPSA status_psa = 44; // status_psa object for statusv3 messages
+}
+
+message PaymentInfo {
+  enum Currency {
+    UNKNOWN_CURRENCY = 0 [deprecated=true]; // shouldn't be used
+    INR = 1 [deprecated=true]; // indian rupee
+  }
+  enum Status {
+    UNKNOWN_STATUS = 0 [deprecated=true];
+    PROCESSING = 1 [deprecated=true];
+    SENT = 2 [deprecated=true];
+    NEED_TO_ACCEPT = 3 [deprecated=true];
+    COMPLETE = 4 [deprecated=true];
+    COULD_NOT_COMPLETE = 5 [deprecated=true];
+    REFUNDED = 6 [deprecated=true];
+    EXPIRED = 7 [deprecated=true];
+    REJECTED = 8 [deprecated=true];
+    CANCELLED = 9 [deprecated=true];
+    WAITING_FOR_PAYER = 10 [deprecated=true];
+    WAITING = 11 [deprecated=true];
+  }
+  enum TxnStatus {
+    UNKNOWN = 0; // non-server status
+    PENDING_SETUP = 1;
+    PENDING_RECEIVER_SETUP = 2;
+    INIT = 3; // non-server status
+    SUCCESS = 4;
+    COMPLETED = 5;
+    FAILED = 6;
+    FAILED_RISK = 7;
+    FAILED_PROCESSING = 8;
+    FAILED_RECEIVER_PROCESSING = 9;
+    FAILED_DA = 10;
+    FAILED_DA_FINAL = 11;
+    REFUNDED_TXN = 12; // REFUNDED
+    REFUND_FAILED = 13;
+    REFUND_FAILED_PROCESSING = 14;
+    REFUND_FAILED_DA = 15;
+    EXPIRED_TXN = 16; // EXPIRED
+    AUTH_CANCELED = 17;
+    AUTH_CANCEL_FAILED_PROCESSING = 18;
+    AUTH_CANCEL_FAILED = 19;
+    COLLECT_INIT = 20; // non-server status
+    COLLECT_SUCCESS = 21;
+    COLLECT_FAILED = 22;
+    COLLECT_FAILED_RISK = 23;
+    COLLECT_REJECTED = 24;
+    COLLECT_EXPIRED = 25;
+    COLLECT_CANCELED = 26; // non-server status
+    COLLECT_CANCELLING = 27; // non-server status
+    IN_REVIEW = 28;
+  }
+  optional Currency currency_deprecated = 1 [deprecated=true];
+  optional uint64 amount_1000 = 2; // This will be deprecated -- payment amount *1000 to account for decimal place
+  optional string receiver_jid = 3 [(jid) = true];
+  optional Status status = 4 [deprecated=true];
+  optional uint64 transaction_timestamp = 5;
+  optional MessageKey request_message_key = 6;
+  optional uint64 expiry_timestamp = 7;
+  optional bool futureproofed = 8;
+  optional string currency = 9; // This will be deprecated -- 3-character ISO 4217 currency code (USD, INR, MXN, ...)
+  optional TxnStatus txn_status = 10;
+
+
+  // In the case of a cross border transaction with Novi the primaryAmount could differ from the secondaryAmount both in number and currency.
+  // For x-border transactions:
+  // 387.67 Mexico peso should be displayed as "$387.67 MXN" regardless user device's locale.
+  // For domestic transactions:
+  // 387.67 Mexico peso could be displayed as "$387.67" if user device's locale is Mexico, but displayed as "$MX387.67" if user device's locale is not.
+  optional bool use_novi_fiat_format = 11; // whether we should render the currency as cross-border
+
+  optional Money primary_amount = 12;
+  // For normal non-novi transactions we may only need the primary amount and can forgo the exchange_amount.
+  optional Money exchange_amount = 13;
+}
+
+message WebNotificationsInfo {
+  optional uint64 timestamp = 2; // in unixtime
+  optional uint32 unread_chats = 3;
+  optional uint32 notify_message_count = 4;
+  repeated WebMessageInfo notify_messages = 5;
+}
+
+message NotificationMessageInfo {
+  optional MessageKey key = 1;
+  optional Message message = 2; // to limit the msg content, phone client could trim the jpeg_thumbnail and context_info fields out of msg content, which should be the biggest parts of msg that are unnecessary for notification display
+  optional uint64 message_timestamp = 3;  // in unixtime
+  optional string participant = 4 [(jid) = true];  // message author, if MessageKey.remote_jid is a group
+}
+
+// fields in WebFeatures *MUST* only be of the Flag enum type
+message WebFeatures {
+  enum Flag {
+    NOT_STARTED = 0; // feature not yet started, equivalent to not setting the field
+    FORCE_UPGRADE = 1; // feature is backward incompatible, force web client upgrade (confirm with web team before using this value)
+    DEVELOPMENT = 2; // feature in development, enables the feature in dev
+    PRODUCTION = 3; // feature ready for production, enables the feature in prod
+  }
+  optional Flag labels_display = 1;
+  optional Flag voip_individual_outgoing = 2;
+  optional Flag groups_v3 = 3;
+  optional Flag groups_v3_create = 4;
+  optional Flag change_number_v2 = 5;
+  optional Flag query_status_v3_thumbnail = 6;
+  optional Flag live_locations = 7;
+  optional Flag query_vname = 8;
+  optional Flag voip_individual_incoming = 9;
+  optional Flag quick_replies_query = 10; // quick_replies_ranking and quick_replies_attachment are not in v1 of the quick replies spec
+  optional Flag payments = 11;
+  optional Flag sticker_pack_query = 12; // Query for 1st party sticker packs
+  optional Flag live_locations_final = 13;
+  optional Flag labels_edit = 14;
+  optional Flag media_upload = 15;
+  //optional Flag deprecated_16 = 16;
+  //optional Flag deprecated_17 = 17;
+  optional Flag media_upload_rich_quick_replies = 18;
+  optional Flag vname_v2 = 19;
+  optional Flag video_playback_url = 20;
+  optional Flag status_ranking = 21;
+  optional Flag voip_individual_video = 22;
+  optional Flag third_party_stickers = 23; // Sticker pack query supports 3rd party sticker packs
+  optional Flag frequently_forwarded_setting = 24;
+  optional Flag groups_v4_join_permission = 25;
+  optional Flag recent_stickers = 26;
+  optional Flag catalog = 27;
+  optional Flag starred_stickers = 28;
+  optional Flag voip_group_call = 29;
+  optional Flag template_message = 30;
+  optional Flag template_message_interactivity = 31;
+  optional Flag ephemeral_messages = 32;
+  optional Flag e2e_notification_sync = 33;
+  optional Flag recent_stickers_v2 = 34; // We need to fix a bug for web clients T64193302
+  //optional Flag deprecated_35 = 35;
+  optional Flag recent_stickers_v3 = 36; // This is for Android launch
+  optional Flag user_notice = 37; // This is for Privacy Policy and Terms of Service update
+  //optional Flag deprecated_38 = 38;
+  optional Flag support = 39; // This is for enabling In App Support groups
+  optional Flag group_uii_cleanup = 40; // This is for enabling group uii cleanup on web. We will use FORCE_UPGRADE when enabling this flag
+  optional Flag group_dogfooding_internal_only = 41; // This is only used for internal fbid group dogfooding. Phone should set val to DEVELOPMENT when accompany AB prop is enabled.
+  optional Flag settings_sync = 42; // This is for syncing the settings between Phone and Web clients
+  optional Flag archive_v2 = 43; // This is for enabling Archive 2.0
+  optional Flag ephemeral_allow_group_members = 44; // Phone should set this flag to PRODUCTION if the ABProp `ephemeral_allow_group_members` is set to true
+  optional Flag ephemeral_24h_duration = 45; // Phone should set this flag to PRODUCTION if the ABProp `ephemeral_24h_duration` is set to true
+  optional Flag md_force_upgrade = 46; // Phone should set this flag to FORCE_UPGRADE if the ABProp 'md_force_web_upgrade' is set to true
+  optional Flag disappearing_mode = 47; // This is for enabling disappearing mode on legacy web
+  optional Flag external_md_opt_in_available = 48; // This is for enabling old web protocol initiated MD opt in
+  optional Flag no_delete_message_time_limit = 49; // Phone should set this flag to PRODUCTION if the ABProp `no_delete_message_time_limit` is set to true
+}
+
+message MediaData {
+    optional string local_path = 1;
+}
+
+message PhotoChange {
+    optional bytes old_photo = 1;
+    optional bytes new_photo = 2;
+    optional uint32 new_photo_id = 3;
+}
+
+message StatusPSA {
+  required string campaign_id = 44; // the PSA messages has one associated campaign id. See status_v3.txt.
+  optional uint64 campaign_expiration_timestamp = 45; // the PSA messages has one expiration timestamp. See status_v3.txt.
+}
+
+message UserReceipt {
+    required string user_jid = 1 [(jid) = true];
+    optional int64 receipt_timestamp = 2;
+    optional int64 read_timestamp = 3;
+    optional int64 played_timestamp = 4;
+
+    repeated string pending_device_jid = 5;
+    repeated string delivered_device_jid = 6;
+}
+
+message Reaction {
+    // Key for the reaction message.
+    optional MessageKey key = 1;
+
+    // This string should contain a single emoji with the content of the reaction.
+    // Leave this field unset to remove a reaction.
+    optional string text = 2;
+
+    // This string is used to group similar emoji. It is like text but without modifiers.
+    optional string grouping_key = 3;
+
+    // Client-assigned timestamp (milliseconds since 1970).
+    // Use this to order reactions from the same user.
+    // This should be set to MAX(last_sender_timestamp_ms + 1, current_server_adjusted_time) (see reactions.md#editing for details)
+    optional int64 sender_timestamp_ms = 4;
+
+    // read state
+    optional bool unread = 5;
+}

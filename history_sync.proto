@@ -1,0 +1,164 @@
+package whatsapp;
+option java_package = "com.whatsapp.proto";
+
+import "web.proto";
+import "e2e.proto";
+import "protocol.proto";
+
+message HistorySync {
+  enum HistorySyncType {
+    INITIAL_BOOTSTRAP = 0;
+    INITIAL_STATUS_V3 = 1;
+    FULL = 2;
+    RECENT = 3;
+    PUSH_NAME = 4;
+  }
+  required HistorySyncType sync_type = 1;
+  repeated Conversation conversations = 2;
+  repeated WebMessageInfo status_v3_messages = 3;
+  optional uint32 chunk_order = 5;
+  optional uint32 progress = 6;
+  repeated Pushname pushnames = 7;
+  // For cross-platform migration only - not needed for M-D.
+  optional GlobalSettings global_settings = 8;
+  // Initial sync only, send the chat thread logging attributes to companion devices
+  // Please refer to doc/chat_message_counts.md
+  optional bytes thread_id_user_secret = 9;
+  optional uint32 thread_ds_timeframe_offset = 10;
+}
+
+message Conversation {
+  enum EndOfHistoryTransferType {
+    COMPLETE_BUT_MORE_MESSAGES_REMAIN_ON_PRIMARY = 0;
+    COMPLETE_AND_NO_MORE_MESSAGE_REMAIN_ON_PRIMARY = 1;
+  }
+  // Note: Conversation id is always required.
+  // This will be the protocol string representation of a chat jid, usually a user jid or group jid.
+  // If the id is not recognized as a valid jid by the receiving device,
+  // this should be logged and the conversation (and any associated messages) can be discarded.
+  required string id = 1 [(jid) = true];
+  // Note: HistorySyncMsg messages is required when transferring msgs.
+  repeated HistorySyncMsg messages = 2;
+  // All fields below are optional except during initial_bootstrap
+  /*
+    new_jid and old_jid  indicate what a user's old/new number is after a
+    change_number v2 operation, for displaying the persistent notification in the chat
+  */
+  optional string new_jid = 3 [(jid) = true];
+  optional string old_jid = 4 [(jid) = true];
+  optional uint64 last_msg_timestamp = 5 [deprecated=true];
+  optional uint32 unread_count = 6;
+  optional bool read_only = 7;
+  optional bool end_of_history_transfer = 8 [deprecated=true];
+  optional uint32 ephemeral_expiration = 9; // in seconds, only sent for ephemeral conversations
+  optional int64 ephemeral_setting_timestamp = 10; // in seconds, only sent for ephemeral conversations
+  optional EndOfHistoryTransferType end_of_history_transfer_type = 11;
+  optional uint64 conversation_timestamp = 12; // in seconds
+  // Set for all group chats, with the group name. Only for initial sync
+  optional string name = 13;
+  // Set for all group chat, with pHash (version 1 hash of users in the group). Only for initial sync
+  optional string p_hash = 14;
+  // Initial sync only, set to true for chat that is not suspicious / spam
+  optional bool not_spam = 15;
+  // Specifies if chat is archived
+  optional bool archived = 16;
+  // Disappearing mode metadata
+  optional DisappearingMode disappearing_mode = 17;
+  // Unread mention count of messages that have mentions
+  optional uint32 unread_mention_count = 18;
+  // User marked the chat as unread
+  optional bool marked_as_unread = 19;
+  // For group conversation specifies list of participants; used for cross-platform migration.
+  repeated GroupParticipant participant = 20;
+  // For 1:1 conversation, we might have a tctoken associated; used for online presence subscription. Initial sync and cross-platform migration
+  optional bytes tc_token = 21;
+  // in unixtime, the server timestamp when the client received the token for the last time; used to delete the expired tctoken. Initial sync and cross-platform migration
+  optional uint64 tc_token_timestamp = 22;
+  // For 1:1 conversation, primary should include the contact's primary identity key; used for adv. Only for initial sync
+  // Note: contact_primary_identity_key does not contain the "key type" (0x05) prefix
+  optional bytes contact_primary_identity_key = 23;
+  // Indicates if chat is pinned - null means chat is not pinned, 1 is top, 2 is middle, 3 is bottom.
+  // If number of pinned will be increased, greater one is the bottom one. (used for Cross Platform migration only)
+  optional uint32 pinned = 24;
+  // Indicates if chat is muted, and time (in seconds, as other timestamps) when mute will be ended. Null means chat is not muted. (used for Cross Platform migration only)
+  optional uint64 mute_end_time = 25;
+  // Custom wallpaper settings (used for Cross Platform migration only)
+  optional WallpaperSettings wallpaper = 26;
+  // Specifies if media from chat should be visible in Gallery / Camera Roll (used for Cross Platform migration only)
+  optional MediaVisibility media_visibility = 27;
+  // in unixtime, the server timestamp when the client asked the server to generated a token for the conversation partner; Only for initial sync
+  optional uint64 tc_token_sender_timestamp = 28;
+  // For group conversation, specifies whether group is suspended
+  optional bool suspended = 29;
+}
+
+message HistorySyncMsg {
+  // We use WebMessageInfo vs the standard Message
+  // from e2e proto so we can include additional info like receipt status, starred etc
+  optional WebMessageInfo message = 1;
+  // this is primary's row id
+  optional uint64 msg_order_id = 2;
+}
+
+message Pushname {
+  optional string id = 1 [(jid) = true];
+  optional string pushname = 2;
+}
+
+message GroupParticipant {
+  enum Rank {
+    REGULAR = 0;
+    ADMIN = 1;
+    SUPERADMIN = 2;
+  }
+
+  // UserJid of participant
+  required string user_jid = 1  [(jid) = true];
+  // Rank - if not specified, assumed as REGULAR user
+  optional Rank rank = 2;
+}
+
+message WallpaperSettings {
+    // Relative path to custom wallpaper file
+    optional string filename = 1;
+    // If opacity is missed assume it is equal to default value
+    optional uint32 opacity = 2;
+}
+
+enum MediaVisibility {
+    DEFAULT = 0;
+    OFF = 1;
+    ON = 2;
+}
+
+message GlobalSettings {
+    // Default wallpaper to be used by default for all chats;
+    // could be individually overridden for chat;
+    // light theme
+    optional WallpaperSettings light_theme_wallpaper = 1;
+
+    // Default value to specify if chat media should be visible in Gallery / Camera Roll;
+    // could be individually overridden for chat
+    optional MediaVisibility media_visibility = 2;
+
+    // Default wallpaper to be used by default for all chats;
+    // could be individually overridden for chat;
+    // dark theme
+    optional WallpaperSettings dark_theme_wallpaper = 3;
+
+    // Auto-download settings
+    optional AutoDownloadSettings auto_download_WiFi = 4;
+    optional AutoDownloadSettings auto_download_cellular = 5;
+    optional AutoDownloadSettings auto_download_roaming = 6;
+
+    // Notifications
+    optional bool show_individual_notifications_preview = 7;
+    optional bool show_group_notifications_preview = 8;
+}
+
+message AutoDownloadSettings {
+    optional bool download_images = 1;
+    optional bool download_audio = 2;
+    optional bool download_video = 3;
+    optional bool download_documents = 4;
+}

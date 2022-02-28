@@ -1,0 +1,35 @@
+// Android copy of Vesta proto. Ground truth here:
+//  - https://www.internalfb.com/code/fbsource/xplat/rust/vesta_client/proto/src/messages.proto
+package whatsapp;
+option java_package = "com.whatsapp.proto";
+
+// Payload stored by successful registration (by `finish_register_request`).
+message RegistrationPayload {
+  // The secret data to be protected by the HSM system.
+  // Holds serialized `WaBackupKeyData` proto.
+  optional bytes backup_key_data = 1;
+  // OPAQUE protocol third registration message.
+  optional bytes r3 = 2;
+  // Registration nonce.
+  // Deprecated and soon to be removed. Replaced by `transcript` (see protocol spec).
+  optional bytes opaque_challenge = 3;
+  // History of registration messages: `SHA256(R1, R2, opaque_challenge)`
+  optional bytes transcript = 4;
+}
+
+// Payload returned on successful account login (by `finish_login_request`).
+message LoginPayload {
+  // `backup_key_data` from `RegistrationPayload` AES-GCM-128 encrypted with
+  // OPAQUE `shared_key`.
+  optional bytes backup_key_data_encrypted = 1;
+  // Nonce used for AES-GCM-128 encryption of `backup_key_data`.
+  optional bytes rk_nonce = 2;
+}
+
+// WA-specific proto serialized to/from Vesta `backup_key_data` field.
+message WaBackupKeyData {
+  // User's backup key AES-GCM-128 encrypted with OPAQUE export key.
+  optional bytes aes_k = 1;
+  // Nonce used to AES-GCM-128 encrypt `aes_k`.
+  optional bytes k_nonce = 2;
+}

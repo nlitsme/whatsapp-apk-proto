@@ -1,0 +1,52 @@
+// Uncomment syntax = "proto2"; for erlang protobuf code generator
+syntax = "proto2";
+
+package whatsapp;
+
+option java_package = "com.whatsapp.proto";
+
+message LocalizedName {
+  optional string lg = 1;
+  optional string lc = 2;
+  optional string verified_name = 3;
+}
+
+message VerifiedNameCertificate {
+  message Details {
+    optional uint64 serial = 1;
+    optional string issuer = 2;
+    optional string verified_name = 4;
+    repeated LocalizedName localized_names = 8;
+    optional uint64 issue_time = 10;  // for server use, do not modify on clients
+  }
+
+  // this set as bytes to match what we do in wa.proto
+  optional bytes details = 1;
+  optional bytes signature = 2;
+  optional bytes server_signature = 3;  // for server use, do not modify on clients
+}
+
+message BizAccountPayload {
+  optional VerifiedNameCertificate vname_cert = 1;
+  // biz_acct_link_info stores encrypted BizAccountLinkInfo as bytes.
+  optional bytes biz_acct_link_info = 2;
+}
+
+message BizAccountLinkInfo {
+  optional uint64 whatsapp_biz_acct_fbid = 1;
+  optional string whatsapp_acct_number = 2;
+  optional uint64 issue_time = 3;
+}
+
+message BizIdentityInfo {
+  enum VerifiedLevelValue {
+    unknown = 0;
+    low = 1;
+    high = 2;
+  }
+  // more details for vlevel(verified_level) in EntSchema https://fburl.com/diffusion/cgbffvib
+  optional VerifiedLevelValue vlevel = 1;
+  optional VerifiedNameCertificate vname_cert = 2;
+  optional bool signed = 3;
+  optional bool revoked = 4;
+}

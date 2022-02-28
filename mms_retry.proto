@@ -1,0 +1,31 @@
+package whatsapp;
+
+option java_package = "com.whatsapp.proto";
+
+message MediaRetryNotification {
+    enum ResultType {
+        // Upload error occurred or the stanza ID in the server-error receipt
+        // stanza does not match the stanza ID in the server-error receipt
+        // protobuf.
+        // this is retriable for MD
+        GENERAL_ERROR = 0;
+        // Reupload was successful, direct path will be set
+        SUCCESS = 1;
+        // Referenced message or the media for that message is not found.
+        // Value will be sent in an error child for the mediaretry notification
+        // when the message cannot be found.
+        // this is not retriable for MD
+        NOT_FOUND = 2;
+        // Failed to decrypt the server-error receipt payload
+        // Value will be sent in an error child for the mediaretry notification
+        // this is not retriable for MD
+        DECRYPTION_ERROR = 3;
+    }
+    optional string stanza_id = 1;
+    optional string direct_path = 2;
+    optional ResultType result = 3;
+}
+
+message ServerErrorReceipt {
+    optional string stanza_id = 1;
+}

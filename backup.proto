@@ -1,0 +1,73 @@
+// This file is Android specific
+package whatsapp;
+option java_package = "com.whatsapp.proto";
+
+message BackupPrefix {
+    enum KeyType {
+      WA_PROVIDED = 0;
+      HSM_CONTROLLED = 1;
+    }
+    optional KeyType key_type = 1;
+    optional WaProvidedKeyData wa_provided_key_data = 2;
+    optional HsmControlledKeyData hsm_controlled_key_data = 3;
+    optional BackupMetadata backup_metadata = 4;
+}
+
+message WaProvidedKeyData {
+    optional bytes backup_cipher_header = 1; // 2 bytes. Specifies the version of the file.
+    optional string key_version = 2; // 1 byte
+    optional bytes server_salt = 3; // 32 bytes
+    optional bytes google_id_salt = 4; // 16 bytes
+    optional bytes encryption_iv = 5; // 16 bytes
+
+}
+
+message HsmControlledKeyData {
+    optional bytes encryption_iv = 1; // 16 bytes
+}
+
+message BackupMetadata {
+    optional string app_version = 1;
+    optional string device_model = 2;
+    optional string jid_suffix = 3; // last 2 digits of jid user
+
+    // Number that represents the version of the backup schema. 
+    optional int32 backup_version = 4;
+
+    // migration specific fields
+    // v1 migrations fields
+    optional bool call_log_migration_finished = 5;
+    optional bool labeled_jid_migration_finished = 6;
+    optional bool message_fts_migration_finished = 7;
+    optional bool blank_me_jid_migration_finished = 8;
+    optional bool message_link_migration_finished = 9;
+    optional bool message_main_migration_finished = 10;
+    optional bool message_text_migration_finished = 11;
+    optional bool missed_calls_migration_finished = 12;
+    optional bool receipt_user_migration_finished = 13;
+    optional bool message_media_migration_finished = 14;
+    optional bool message_vcard_migration_finished = 15;
+    optional bool message_future_migration_finished = 16;
+    optional bool message_quoted_migration_finished = 17;
+    optional bool message_system_migration_finished = 18;
+    optional bool receipt_device_migration_finished = 19;
+    optional bool message_mention_migration_finished = 20;
+    optional bool message_revoked_migration_finished = 21;
+    optional bool broadcast_me_jid_migration_finished = 22;
+    optional bool message_frequent_migration_finished = 23;
+    optional bool message_location_migration_finished = 24;
+    optional bool participant_user_migration_finished = 25;
+    optional bool message_thumbnail_migration_finished = 26;
+    optional bool message_send_count_migration_finished = 27;
+    optional bool migration_jid_store_migration_finished = 28;
+    optional bool payment_transaction_migration_finished = 29;
+    optional bool migration_chat_store_migration_finished = 30;
+    optional bool quoted_order_message_migration_finished = 31;
+    optional bool media_migration_fixer_migration_finished = 32;
+    optional bool quoted_order_message_v2_migration_finished = 33;
+    optional bool message_main_verification_migration_finished = 34;
+    optional bool quoted_ui_elements_reply_message_migration_finished = 35;
+    optional bool alter_message_ephemeral_to_message_ephemeral_remove_column_migration_finished = 36;
+    optional bool alter_message_ephemeral_setting_to_message_ephemeral_setting_remove_column_migration_finished = 37;
+    // end of v1 migrations fields
+}

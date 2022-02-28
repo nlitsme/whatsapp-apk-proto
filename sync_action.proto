@@ -1,0 +1,214 @@
+package whatsapp;
+
+option java_package = "com.whatsapp.proto";
+option optimize_for = LITE_RUNTIME;
+
+import "protocol.proto";
+
+message RecentStickerWeight {
+    // the filehash of the sticker file
+    optional string filehash = 1;
+    optional float weight = 2;
+}
+
+message RecentEmojiWeight {
+    optional string emoji = 1;
+    optional float weight = 2;
+}
+
+message SyncActionValue {
+    /* server timestamp when the action happened in milliseconds */
+    optional int64 timestamp = 1;
+
+    message StarAction {
+        optional bool starred = 1;
+    }
+
+    message ContactAction {
+        /* full_name must always appear as non empty string */
+        optional string full_name = 1;
+        optional string first_name = 2;
+    }
+
+    message MuteAction {
+        optional bool muted = 1;
+        /* server timestamp + mute duration in milliseconds */
+        optional int64 mute_end_timestamp = 2;
+    }
+
+    message PinAction {
+        optional bool pinned = 1;
+    }
+
+    message SecurityNotificationSetting {
+        optional bool show_notification = 1;
+    }
+
+    message PushNameSetting {
+        optional string name = 1;
+    }
+
+    message LocaleSetting {
+        optional string locale = 1;
+    }
+
+    message QuickReplyAction {
+        optional string shortcut = 1;
+        optional string message = 2;
+        repeated string keywords = 3;
+        optional int32 count = 4;
+        optional bool deleted = 5;
+    }
+
+    message LabelAssociationAction {
+        optional bool labeled = 1;
+    }
+
+    message LabelEditAction {
+        optional string name = 1;
+        optional int32 color = 2;
+        optional int32 predefinedId = 3;
+        optional bool deleted = 4;
+    }
+
+    message RecentStickerWeightsAction {
+        repeated RecentStickerWeight weights = 1;
+    }
+
+    message RecentStickerMetadata {
+        optional string directPath = 1;
+        optional string encFilehash = 2;
+        optional string mediaKey = 3;
+        optional string stanzaId = 4;
+        optional string chatJid = 5;
+        optional string participant = 6;
+        optional bool isSentByMe = 7;
+    }
+
+    message RecentEmojiWeightsAction {
+        repeated RecentEmojiWeight weights = 1;
+    }
+
+    message FavoriteStickerAction {
+      optional string directPath = 1;
+      optional string lastUploadTimestamp = 2;
+      optional string handle = 3;
+      optional string encFilehash = 4;
+      optional string stickerHashWithoutMeta = 5;
+      optional string mediaKey = 6;
+      optional int64 mediaKeyTimestamp = 7;
+      optional bool isFavorite = 8;
+    }
+
+    message ArchiveChatAction {
+        optional bool archived = 1;
+        optional SyncActionMessageRange message_range = 2;
+    }
+
+    message DeleteMessageForMeAction {
+        optional bool delete_media = 1;
+        optional int64 message_timestamp = 2;
+    }
+
+    message MarkChatAsReadAction {
+        optional bool read = 1;
+        optional SyncActionMessageRange message_range = 2;
+    }
+
+    message ClearChatAction {
+        optional SyncActionMessageRange message_range = 1;
+    }
+
+    message DeleteChatAction {
+        optional SyncActionMessageRange message_range = 1;
+    }
+
+    message UnarchiveChatsSetting {
+        optional bool unarchive_chats = 1;
+    }
+
+    /* MessageRange specification: https://our.internmc.facebook.com/intern/diffusion/WACOMMON/browse/master/doc/md_client_to_client_sync/message_ranges_for_bulk_operations.md */
+    message SyncActionMessageRange {
+        /* in seconds */
+        optional int64 last_message_timestamp = 1;
+        /* in seconds */
+        optional int64 last_system_message_timestamp = 2;
+        repeated SyncActionMessage messages = 3;
+    }
+
+    message SyncActionMessage {
+        optional MessageKey key = 1;
+        /* in seconds */
+        optional int64 timestamp = 2;
+    }
+
+    message KeyExpiration {
+        optional int32 expired_key_epoch = 1;
+    }
+
+    message PrimaryFeature {
+        /* all flags: 'contact_except' */
+        repeated string flags = 1;
+    }
+
+    message AndroidUnsupportedActions {
+        optional bool allowed = 1;
+    }
+
+    optional StarAction star_action = 2;
+    optional ContactAction contact_action = 3;
+    optional MuteAction mute_action = 4;
+    optional PinAction pin_action = 5;
+    optional SecurityNotificationSetting security_notification_setting = 6;
+    optional PushNameSetting push_name_setting = 7;
+    optional QuickReplyAction quick_reply_action = 8;
+    optional RecentStickerWeightsAction recent_sticker_weights_action = 9;
+    optional RecentStickerMetadata recent_sticker_metadata = 10;
+    optional RecentEmojiWeightsAction recent_emoji_weights_action = 11;
+    /* optional LabelContactAction label_contact_action = 12; */
+    /* optional LabelMessageAction label_message_action = 13; */
+    optional LabelEditAction label_edit_action = 14;
+    optional LabelAssociationAction label_association_action = 15;
+    optional LocaleSetting locale_setting = 16;
+    optional ArchiveChatAction archive_chat_action = 17;
+    optional DeleteMessageForMeAction delete_message_for_me_action = 18;
+    /* Used for key rotation. Only set for `SyncActionData` with index = "expired_key_epoch". */
+    optional KeyExpiration key_expiration = 19;
+    optional MarkChatAsReadAction mark_chat_as_read_action =  20;
+    optional ClearChatAction clear_chat_action = 21;
+    optional DeleteChatAction delete_chat_action = 22;
+    optional UnarchiveChatsSetting unarchive_chats_setting = 23;
+    optional PrimaryFeature primary_feature = 24;
+    optional FavoriteStickerAction favorite_sticker_action = 25;
+    optional AndroidUnsupportedActions android_unsupported_actions = 26;
+}
+
+message SyncActionData {
+    optional bytes index = 1;
+    optional SyncActionValue value = 2;
+    optional bytes padding = 3;
+
+    /**
+     * Version number and associated actions
+     * 0 - invalid, no action exist on this version
+     * 1 - PushNameSetting
+     * 2 - ContactAction, StarAction, MuteAction, SecurityNotificationSetting, QuickReplyAction
+     * 3 - RecentStickerMetadata
+           RecentEmojiWeightsAction
+           LabelEditAction
+           LabelAssociationAction
+           LocaleSetting
+           ArchiveChatAction
+           DeleteMessageForMeAction
+           MarkChatAsReadAction
+           KeyExpiration
+       4 - UnarchiveChatsSetting
+           AndroidUnsupportedActions
+       5 - PinAction
+       6 - ClearChatAction
+           DeleteChatAction
+       7 - FavoriteStickerAction
+           PrimaryFeature
+     */
+    optional int32 version = 4;
+}

@@ -1,0 +1,34 @@
+package whatsapp;
+
+option java_package = "com.whatsapp.proto";
+
+message CompanionProps {
+    enum PlatformType {
+        UNKNOWN = 0;
+        CHROME = 1;
+        FIREFOX = 2;
+        IE = 3;
+        OPERA = 4;
+        SAFARI = 5;
+        EDGE = 6;
+        DESKTOP = 7;
+        IPAD = 8;
+        ANDROID_TABLET = 9;
+        // Portal devices
+        OHANA = 10;
+        ALOHA = 11;
+        CATALINA = 12;
+    }
+
+    message AppVersion {
+      optional uint32 primary = 1;
+      optional uint32 secondary = 2;
+      optional uint32 tertiary = 3;
+      optional uint32 quaternary = 4;
+    }
+
+    optional string os = 1;
+    optional AppVersion version = 2;
+    optional PlatformType platform_type = 3;
+    optional bool require_full_sync = 4;
+}

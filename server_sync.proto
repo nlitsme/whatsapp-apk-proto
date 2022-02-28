@@ -1,0 +1,120 @@
+package whatsapp;
+option java_package = "com.whatsapp.proto";
+
+/************************
+ * Common structs
+ ************************/
+
+message SyncdVersion {
+    optional uint64 version = 1;
+}
+
+message ExitCode {
+    // Unique code to identify the type of error that occured.
+    optional uint64 code = 1;
+
+    // Optional error message with more details about what went wrong
+    optional string text = 2;
+}
+
+// Lookup key part of a SyncdRecord.
+// 'index' is used instead of 'key' to distinguish from 'encryption key'
+message SyncdIndex {
+    // Optional:
+    // Index which has been binary encoded on the client side,
+    // see https://fb.quip.com/1u2DAnQGKkCD for discussion
+    optional bytes blob = 1;
+}
+
+message SyncdValue {
+    optional bytes blob = 1; // Value which has been binary encoded by client
+}
+
+message KeyId {
+    optional bytes id = 1;
+}
+
+// Represents a single index/value within a snapshot or mutation
+message SyncdRecord {
+    // Contains the HMAC of the encoded mutation index. Used by the server to compact mutations
+    // applied to the same record.
+    optional SyncdIndex index = 1;
+    // Contains the encrypted and authenticated record data.
+    optional SyncdValue value = 2;
+    // ID of the encryption key that was used to encrypt this record.
+    optional KeyId key_id = 3;
+}
+
+// Meta-data about an encrypted snapshot or mutations blob stored in Everstore
+message ExternalBlobReference {
+    // 'media key', used to derive cipher key, IV, and HMAC key.
+    // See section 4A of WACOMMON/doc/end_to_end_encryption/media.txt
+    optional bytes media_key = 1;
+    optional string direct_path = 2; // direct_path returned from upload service
+    optional string handle = 3; // handle returned from upload service
+    optional uint64 file_size_bytes = 4; // length of plain text in bytes
+    optional bytes file_sha256 = 5; // sha256 hash of plain text
+    optional bytes file_enc_sha256 = 6; // sha256 hash of cipher text
+}
+
+/************************
+ * Snapshots
+ ************************/
+
+// Versioned collection of distinct index/value pairs,
+// e.g. representing all stared messages for a user.
+message SyncdSnapshot {
+    optional SyncdVersion version = 1;
+    repeated SyncdRecord records = 2;
+    optional bytes mac = 3;
+    optional KeyId key_id = 4;
+}
+
+/************************
+ * Patches
+ ************************/
+
+// Concrete mutations, which will either be passed inline inside a SyncdPatch,
+// or will be stored externally in Everstore.
+message SyncdMutations {
+    repeated SyncdMutation mutations = 1;
+}
+
+message SyncdMutation {
+    enum SyncdOperation {
+        SET = 0;
+        REMOVE = 1;
+    }
+    optional SyncdOperation operation = 1;
+    optional SyncdRecord record = 2;
+}
+
+// Used when submitting patches to and receiving patches from server
+// Serialized SyncdPatch goes into <patch> tag within IQ.
+message SyncdPatch {
+    // Clients should leave this field blank when creating new patches for submission to server.
+    optional SyncdVersion version = 1;
+
+    // For mutations passed inline, this field will be popualted when clients receive SyncdPatch in IQ response.
+    repeated SyncdMutation mutations = 2;
+
+    // For external patches, this field should be populated with a reference to
+    // an encrypted SyncdMutations blob uploaded to Everstore.
+    optional ExternalBlobReference external_mutations = 3;
+    optional bytes snapshot_mac = 4;
+    optional bytes patch_mac = 5;
+    // ID of the encryption key used to generate snapshot and patch MACs. It should match the `SET` mutations
+    // included in the patch (unless there are none).
+    optional KeyId key_id = 6;
+
+    // This field should only be set if this is a 'terminal patch'.
+    // Generally only the server will write such patches.
+    // Once a terminal patch has been written, no further patches can be written
+    // to the collection, and clients should treat receiving the terminal patch
+    // the same as if they received a fatal error.
+    // Important: anti-tampering checks should be skipped if a terminal patch is received.
+    optional ExitCode exit_code = 7;
+
+  // The index of the device submitting the patch (12345550001:<device_index>@s.whatsapp.net).
+  optional uint32 device_index = 8;
+}
