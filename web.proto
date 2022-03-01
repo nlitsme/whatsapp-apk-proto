@@ -318,6 +318,9 @@ message PaymentInfo {
     COLLECT_CANCELED = 26; // non-server status
     COLLECT_CANCELLING = 27; // non-server status
     IN_REVIEW = 28;
+    REVERSAL_SUCCESS = 29;
+    REVERSAL_PENDING = 30;
+    REFUND_PENDING = 31;
   }
   optional Currency currency_deprecated = 1 [deprecated=true];
   optional uint64 amount_1000 = 2; // This will be deprecated -- payment amount *1000 to account for decimal place
