@@ -18,6 +18,7 @@ message CompanionProps {
         OHANA = 10;
         ALOHA = 11;
         CATALINA = 12;
+        TCL_TV = 13;
     }
 
     message AppVersion {
@@ -25,6 +26,7 @@ message CompanionProps {
       optional uint32 secondary = 2;
       optional uint32 tertiary = 3;
       optional uint32 quaternary = 4;
+      optional uint32 quinary = 5;
     }
 
     optional string os = 1;
