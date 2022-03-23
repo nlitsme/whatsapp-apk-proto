@@ -147,12 +147,40 @@ message SyncActionValue {
     }
 
     message PrimaryFeature {
-        /* all flags: 'contact_except' */
+        /* all flags:
+            'contact_except'
+            'reactions_send' - shows if primary client able to deal with reaction sends (including future proofed)
+            'ddm_settings' - primary supports ddm duration changes on companion
+            'pnh_ctwa' - phone number hiding, clicks to WhatsApp ads
+        */
         repeated string flags = 1;
     }
 
     message AndroidUnsupportedActions {
         optional bool allowed = 1;
+    }
+
+    message AgentAction {
+        optional string name = 1;
+        // deviceID is an id range from 1-99
+        optional int32 deviceID = 2;
+        // it means this agent is deleted, practically hidden from the UI. We still keep it in agents table for history display
+        optional bool isDeleted = 3;
+    }
+
+    message SubscriptionAction {
+        // boolean flag, when true the subscription is no longer active
+        optional bool isDeactivated = 1;
+        // boolean flag, true indicates that the subscription is active and beeing renewed
+        // false means that the subscription will not be renewed at the end of the current billing cycle
+        // it might be canceled or there's a problem charging customer's payment method
+        optional bool isAutoRenewing = 2;
+        // date/time when the subscription is expiring, might be empty when expiration date is not known
+        optional int64 expirationDate = 3;
+    }
+
+    message UserStatusMuteAction {
+        optional bool muted = 1;
     }
 
     optional StarAction star_action = 2;
@@ -181,6 +209,9 @@ message SyncActionValue {
     optional PrimaryFeature primary_feature = 24;
     optional FavoriteStickerAction favorite_sticker_action = 25;
     optional AndroidUnsupportedActions android_unsupported_actions = 26;
+    optional AgentAction agent_action = 27;
+    optional SubscriptionAction subscription_action = 28;
+    optional UserStatusMuteAction user_status_mute_action = 29;
 }
 
 message SyncActionData {
@@ -209,6 +240,9 @@ message SyncActionData {
            DeleteChatAction
        7 - FavoriteStickerAction
            PrimaryFeature
+           AgentAction
+           SubscriptionAction
+           UserStatusMuteAction
      */
     optional int32 version = 4;
 }
