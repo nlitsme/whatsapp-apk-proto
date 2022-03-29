@@ -125,7 +125,15 @@ message Message {
       DEFAULT = 0; // regular group with no linked subgroup
       PARENT = 1;
     }
-    optional InviteLinkGroupType invite_link_group_type = 26; // Only used if the text message is a group invite link
+    // Only used if the text message is a group invite link.
+    // This is deprecated. Old clients can still send this, but should be ignored.
+    // Use invite_link_group_type_v2 instead.
+    optional InviteLinkGroupType invite_link_group_type = 26;
+
+    optional string invite_link_parent_group_subject_v2 = 27; // Deprecated
+    optional bytes invite_link_parent_group_thumbnail_v2 = 28; // Deprecated
+
+    optional InviteLinkGroupType invite_link_group_type_v2 = 29; //  Only used if the text message is a group invite link - Use in place of invite_link_group_type.
   }
 
   message DocumentMessage {
