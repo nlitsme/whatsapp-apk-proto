@@ -833,6 +833,59 @@ message Message {
   optional int64 sender_timestamp_ms = 4;
 }
 
+  // See polls.md
+  // This is referenced by web.proto. It is kept within the Message protobuf for ease of use on Android"
+  message PollCreationMessage {
+    // Container for each Poll option
+    message Option {
+      // Name of the option voted on. Must be unique
+      optional string option_name = 1;
+    }
+    // 32-byte encryption key used for encrypting PollUpdateMessage(s)
+    optional bytes enc_key = 1;
+    // Name of the poll shown to the user. See polls.md#Creating a Poll for validation
+    optional string name = 2;
+
+    // Options available in the poll for voting. See polls.md#Creating a Poll for validation
+    repeated Option options = 3;
+
+    // Number of options that can be selected. 0 for unlimited options.
+    optional uint32 selectable_options_count = 4;
+
+    optional ContextInfo context_info = 5;
+  }
+
+  // See polls.md
+  message PollUpdateMessage {
+    // Message ID of the poll being updated.
+    optional MessageKey poll_creation_message_key = 1;
+
+    // Contains an encrypted PollVoteMessage protobuf using AES-GCM with the
+    // enc_key from the PollCreationMessage. See polls.md:Dual Encryption
+    optional PollEncValue vote = 2;
+  }
+
+  message PollEncValue {
+    // A payload encrypted using AES-GCM with the enc_key from the
+    // PollCreationMessage. When used for PollUpdateMessage's `vote`, for
+    // example, this will contain an encrypted PollVoteMessage. See
+    // polls.md:Dual Encryption
+    optional bytes enc_payload = 1;
+    // Initialization vector for AES-GCM used with the enc_key to decrypt
+    // the enc_payload. See polls.md:Dual Encryption
+    optional bytes enc_iv = 2;
+  }
+
+  // See polls.md
+  message PollVoteMessage {
+    // SHA-256 hashes of option names that the user has selected. See polls.md:Voting
+    repeated bytes selected_options = 1;
+    // Client-assigned timestamp (milliseconds since 1970).
+    // Use this to order votes from the same user.
+    // This should be set to MAX(last_sender_timestamp_ms + 1, current_server_adjusted_time) (see polls.md#Editing/Ordering for details)
+    optional int64 sender_timestamp_ms = 2;
+  }
+
   optional string conversation = 1;
   optional SenderKeyDistributionMessage sender_key_distribution_message = 2;
   optional ImageMessage image_message = 3;
@@ -881,6 +934,8 @@ message Message {
   optional InteractiveMessage interactive_message = 45;
   optional ReactionMessage reaction_message = 46;
   optional InteractiveResponseMessage interactive_response_message = 48; // See interactive_message.md
+  optional PollCreationMessage poll_creation_message = 49;
+  optional PollUpdateMessage poll_update_message = 50;
 }
 
 message ContextInfo {

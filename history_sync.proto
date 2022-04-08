@@ -154,6 +154,10 @@ message GlobalSettings {
     // Notifications
     optional bool show_individual_notifications_preview = 7;
     optional bool show_group_notifications_preview = 8;
+
+    // Disappearing mode
+    optional int32 disappearing_mode_duration = 9;
+    optional int64 disappearing_mode_timestamp = 10;
 }
 
 message AutoDownloadSettings {
