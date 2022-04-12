@@ -183,6 +183,10 @@ message SyncActionValue {
         optional bool muted = 1;
     }
 
+    message TimeFormatAction {
+        optional bool is_twenty_four_hour_format_enabled = 1;
+    }
+
     optional StarAction star_action = 2;
     optional ContactAction contact_action = 3;
     optional MuteAction mute_action = 4;
@@ -212,6 +216,7 @@ message SyncActionValue {
     optional AgentAction agent_action = 27;
     optional SubscriptionAction subscription_action = 28;
     optional UserStatusMuteAction user_status_mute_action = 29;
+    optional TimeFormatAction time_format_action = 30;
 }
 
 message SyncActionData {
@@ -243,6 +248,7 @@ message SyncActionData {
            AgentAction
            SubscriptionAction
            UserStatusMuteAction
+           TimeFormatAction
      */
     optional int32 version = 4;
 }
