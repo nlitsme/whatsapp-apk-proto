@@ -267,6 +267,7 @@ message WebMessageInfo {
   optional MediaData quoted_sticker_data = 42; // Quoted sticker data - some extra data which is not serialized in E2E messages. This is used for x-migration and only for quoted stickers
   optional bytes futureproof_data = 43; // For StubType.FUTUREPROOF, for cross platform migration only
   optional StatusPSA status_psa = 44; // status_psa object for statusv3 messages
+  optional string agent_id = 47; // uuid for agents, generally associated with companion devices. See https://docs.google.com/document/d/1TZwbr2U8jgEShaiA418wRlftgz-FoW39YLUk3OTQIXY/edit#
 }
 
 message PaymentInfo {
