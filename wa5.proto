@@ -168,7 +168,7 @@ message ClientPayload {
     optional DNSResolutionMethod dns_method = 15;
     optional bool app_cached = 16;
   }
-  message CompanionRegData {
+  message DevicePairingRegistrationData {
     optional bytes e_regid = 1;
     optional bytes e_keytype = 2;
     optional bytes e_ident = 3;
@@ -176,7 +176,7 @@ message ClientPayload {
     optional bytes e_skey_val = 5;
     optional bytes e_skey_sig = 6;
     optional bytes build_hash = 7;
-    optional bytes companion_props = 8;
+    optional bytes device_props = 8;
   }
   enum Product {
     WHATSAPP = 0;
@@ -202,8 +202,8 @@ message ClientPayload {
   optional uint32 connect_attempt_count = 16;
   optional uint32 agent = 17;
   optional uint32 device = 18;
-  // Used only for companion registration (multi device)
-  optional CompanionRegData reg_data = 19;
+  // Used only for device pairing (either WA companion registration or Trust Circle device onboarding)
+  optional DevicePairingRegistrationData device_pairing_data = 19;
   optional Product product = 20;
   optional bytes fb_cat = 21;         // Crypto Auth Token
   optional bytes fb_user_agent = 22;
