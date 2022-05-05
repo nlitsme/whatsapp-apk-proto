@@ -1069,6 +1069,10 @@ message ContextInfo {
 message MessageContextInfo {
   optional DeviceListMetadata device_list_metadata = 1;
   optional int32 device_list_metadata_version = 2;
+
+  // A general purpose 32 byte secret that could be used to derive feature specific secrets to use to authenticate
+  // further operations on this message. See message_secret.md for details.
+  optional bytes message_secret = 3;
 }
 
 // Used by ADV "In Chat Device Consistency". See adv_protocol.md
