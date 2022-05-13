@@ -886,6 +886,17 @@ message Message {
     optional int64 sender_timestamp_ms = 2;
   }
 
+  // See keep_in_chat.md
+  message KeepInChatMessage {
+    //Key of the message that need to be kept or unkept
+    optional MessageKey key = 1;
+    // type of operation
+    optional KeepType keep_type = 2;
+    // local timestamp from client. used to resolve conflicts from a client
+    optional int64 timestamp_ms = 3;
+  }
+
+
   optional string conversation = 1;
   optional SenderKeyDistributionMessage sender_key_distribution_message = 2;
   optional ImageMessage image_message = 3;
@@ -936,6 +947,7 @@ message Message {
   optional InteractiveResponseMessage interactive_response_message = 48; // See interactive_message.md
   optional PollCreationMessage poll_creation_message = 49;
   optional PollUpdateMessage poll_update_message = 50;
+  optional KeepInChatMessage keep_in_chat_message = 51;
 }
 
 message ContextInfo {
@@ -1214,3 +1226,14 @@ message ActionLink {
   optional string url = 1;
   optional string button_title = 2;
 }
+
+// need this top level to not break web & KaiOS as this enum is needed in web.proto as well
+enum KeepType {
+  UNKNOWN = 0;
+  // keep for all in the group
+  KEEP_FOR_ALL = 1;
+  // un-keep for all in the group
+  UNDO_KEEP_FOR_ALL = 2;
+  // this could be extended in future
+}
+
