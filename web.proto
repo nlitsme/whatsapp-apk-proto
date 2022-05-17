@@ -193,6 +193,10 @@ message WebMessageInfo {
     ADMIN_REVOKE = 132; // message was revoked by a group admin (not original message sender)
 
     GROUP_INVITE_LINK_GROWTH_LOCKED = 133; // [1 param boolean, true = link is not available, false = available again]
+
+    // 134-140 to be implemented later
+
+    GROUP_PARTICIPANT_LINKED_GROUP_JOIN = 141; // any number of user jid params, list of participants accepted an add request from the recipient's group invite message
   }
 
   // When there is a race condition and the phone client renders the "i" button, the phone client should inform the web client by using the biz_privacy_status WebMessageInfo enum attribute and the verified_biz_name string value persisted on the phone client:
