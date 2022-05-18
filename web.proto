@@ -197,6 +197,8 @@ message WebMessageInfo {
     // 134-140 to be implemented later
 
     GROUP_PARTICIPANT_LINKED_GROUP_JOIN = 141; // any number of user jid params, list of participants accepted an add request from the recipient's group invite message
+
+    EPHEMERAL_KEEP_IN_CHAT = 143; // message showed to user to let him know now keep a message is enabled
   }
 
   // When there is a race condition and the phone client renders the "i" button, the phone client should inform the web client by using the biz_privacy_status WebMessageInfo enum attribute and the verified_biz_name string value persisted on the phone client:
