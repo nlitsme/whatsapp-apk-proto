@@ -274,6 +274,7 @@ message WebMessageInfo {
   optional bytes futureproof_data = 43; // For StubType.FUTUREPROOF, for cross platform migration only
   optional StatusPSA status_psa = 44; // status_psa object for statusv3 messages
   optional string agent_id = 47; // uuid for agents, generally associated with companion devices. See https://docs.google.com/document/d/1TZwbr2U8jgEShaiA418wRlftgz-FoW39YLUk3OTQIXY/edit#
+  optional KeepInChat keep_in_chat = 50; // info related to any keep in chat. only for ephemeral messages
 }
 
 message PaymentInfo {
@@ -470,3 +471,13 @@ message Reaction {
     // read state
     optional bool unread = 5;
 }
+
+message KeepInChat {
+  //whether this is a keep for all
+  optional KeepType keep_type = 1;
+  //timestamp of the keep message
+  optional int64 server_timestamp = 2;
+
+  optional string kic_user = 3 [(jid) = true]; // JID of the user who last kept/un-kept this message from disappearing
+}
+
