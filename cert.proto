@@ -1,0 +1,60 @@
+package whatsapp;
+
+option java_package = "com.whatsapp.proto";
+
+// certs are passed as the bytes for ServerHello payload
+// the reason why certs are opaque bytes to ServerHello is because payload is encrypted while the other fields are not
+
+// DEPRECATED: this was the certificate message used in wap v5 and prior, and
+// is kept here for generated-code compatibility with ../v5/wa5.proto only. It
+// should not be used in v6 communications; use CertChain below instead. This
+// message will be safe to delete when there are no remaining uses of v5.
+message NoiseCertificate {
+  message Details {
+    optional uint32 serial = 1;
+    optional string issuer = 2;
+    optional uint64 expires = 3;
+    optional string subject = 4;
+    optional bytes key = 5;
+  }
+
+  optional bytes details = 1;
+  optional bytes signature = 2;
+}
+
+// Cert chain upper bound should be 240 bytes + protobuf overhead, well below most county's MTU. As such, handshake should remain reliable
+// in practice, total size will be exactly 240 bytes due to varint encoding compensating for the protobuf overhead
+message CertChain {
+  message NoiseCertificate {
+    message Details {
+      // identifier for this specific cert
+      // size <= 4 bytes (varint encoded)
+      optional uint32 serial = 1;
+      // the serial of the cert whose private key signed the current cert
+      // size <= 4 bytes (varint encoded)
+      optional uint32 issuer_serial = 2;
+      // point-compressed public xed25519 key. This means it's an ed25519 0-bit sign key, converted to x25519
+      // size = 32 bytes
+      optional bytes key = 3;
+      // the date, in Unix time, on which the certificate becomes valid
+      // size <= 8 bytes (varint encoded)
+      optional uint64 not_before = 4;
+      // the date, in Unix time, on which the certificate becomes invalid
+      // size <= 8 bytes (varint encoded)
+      optional uint64 not_after = 5;
+    }
+    // protbuf-encoded Details message. Sent as bytes so that only signer needs to serialize, as protobuf is not canonical
+    // the exact size will vary, but upper bound is 4 + 4 + 32 + 8 + 8 = 56 bytes plus protobuf overhead
+    // in practice, total size will be ~50 bytes
+    // size <= 56 + overhead bytes
+    optional bytes details = 1;
+    // details signed with the private-key associated with key from the certificate identified by issuer_serial
+    // size = 64 bytes
+    optional bytes signature = 2;
+  }
+  // the exact size will vary, but upper bound is 56 + 64 bytes plus protobuf overhead
+  // size <= 120 bytes + overhead bytes
+  optional NoiseCertificate leaf = 1;
+  // size <= 120 bytes + overhead bytes
+  optional NoiseCertificate intermediate = 2;
+}
